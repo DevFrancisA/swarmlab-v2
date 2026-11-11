@@ -64,8 +64,7 @@ class NeuralNetwork:
 
         weight_gradients = []
         bias_gradients = []
-
-        pass
+        
 
 
     def build_network(self):
