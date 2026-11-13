@@ -52,23 +52,10 @@ class NeuralNetwork:
         return logit_layers, activation_layers
 
     def one_hot_encode(self, Y):
-        one_hot_Y = np.zeros((Y.size, self.layer_sizes[0]))
+        one_hot_Y = np.zeros((Y.size, self.layer_sizes[-1]))
         one_hot_Y[np.arange(Y.size), Y] = 1
         one_hot_Y = one_hot_Y.T
         return one_hot_Y
-
-    def backward_propogation(self, logit_layers, activation_layers, X, Y):
-        m = Y.size
-        fixed_activation_layers = activation_layers
-        fixed_activation_layers.insert(0, X)
-
-        weight_gradients = []
-        bias_gradients = []
-        
-
-
-    def build_network(self):
-        pass
 
        
 new_mlp = NeuralNetwork([8, 16, 32, 2])
@@ -82,7 +69,8 @@ X = np.array([
     [0.3],
     [0.7]
 ])
-print(new_mlp.forward_propogation(X))
+
+
 
 
 

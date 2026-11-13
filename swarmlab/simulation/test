@@ -1,0 +1,134 @@
+
+import pygame
+
+# 1. Initialize Pygame and create the game window
+
+pygame.init()
+screen = pygame.display.set_mode((640, 640))
+
+
+# 2. Load and scale player sprite
+
+player = pygame.image.load('swarmlab/simulation/black_dot.png').convert_alpha()
+player = pygame.transform.scale(player,
+                                (player.get_width() / 30,
+                                 player.get_height() / 30))
+
+
+# 3. Initialize game variables
+
+running = True
+
+# Player starting position
+x = 0
+y = 0
+
+box_x = 150
+box_y = 150
+
+# Clock and delta time for frame-independent movement
+clock = pygame.time.Clock()
+delta_time = 0.1
+
+# Font for displaying instructions
+font = pygame.font.Font(None, size=30)
+
+
+# 4. Initialize keyboard input states
+
+W = False
+A = False
+S = False
+D = False
+
+# 5. Main game loop
+
+while running:
+
+    # 5.1 Clear screen and draw player
+
+    screen.fill((255, 255, 255))
+    screen.blit(player, (x, y))
+
+
+    # 5.2 Define game objects and collision areas
+
+    player_hitbox = pygame.Rect(x, y, player.get_width(), player.get_height())
+    goal = pygame.Rect(450, 450, 200, 200)
+    box = pygame.Rect(box_x, box_y, 75, 75)
+
+
+    # 5.4 Draw game objects
+
+    pygame.draw.rect(screen, (0, 0, 0), box)
+    pygame.draw.rect(screen, (80, 200, 120), goal)
+
+
+    # 5.5 Update player position
+
+    if W:
+        y -= 150 * delta_time
+    if A:
+        x -= 150 * delta_time
+    if S:
+        y += 150 * delta_time
+    if D:
+        x += 150 * delta_time
+
+
+    # 5.6 Render on-screen instructions
+
+    text = font.render('push the black box into the green area', True, (0, 0, 0))
+    screen.blit(text, (250, 0))
+
+
+    # 5.7 Handle keyboard and window events
+
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+            running = False
+
+        # Detect keys being pressed
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_w:
+                W = True
+            if event.key == pygame.K_a:
+                A = True
+            if event.key == pygame.K_s:
+                S = True
+            if event.key == pygame.K_d:
+                D = True
+
+        # Detect keys being released
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_w:
+                W = False
+            if event.key == pygame.K_a:
+                A = False
+            if event.key == pygame.K_s:
+                S = False
+            if event.key == pygame.K_d:
+                D = False
+
+    # Check for collision
+    if player_hitbox.colliderect(box):
+        # push box
+        box_x += 150 * delta_time
+
+
+
+    # 5.8 Update the display
+
+    pygame.display.flip()
+
+
+    # 5.9 Control frame rate and calculate delta time
+
+    delta_time = clock.tick(60) / 1000
+    delta_time = max(0.001, min(0.1, delta_time))
+
+
+# 6. Clean up and close Pygame
+
+pygame.quit()
