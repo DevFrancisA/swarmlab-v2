@@ -1,3 +1,4 @@
+
 # init
 import pygame
 
@@ -67,7 +68,8 @@ while running:
                 D = False
 
     # update - calculate position, sync collision rects, detect and resolve collisions, finalize positions
-    first_pos = pygame.math.Vector2(player_x, player_y)
+    first_player = pygame.math.Vector2(player_x, player_y)
+    first_box_x, first_box_y = pygame.math.Vector2(box.x, box.y)
 
     if W:
         player_y -= 150 * delta_time
@@ -76,28 +78,28 @@ while running:
     if S:
         player_y += 150 * delta_time
     if D:
-        player_x += 150 * delta_time      
+        player_x += 150 * delta_time
 
-    second_pos = pygame.math.Vector2(player_x, player_y)
-    displacement = second_pos - first_pos
-    dx = displacement[0]
-    dy = displacement[1]
-    print(displacement)
+    second_player = pygame.math.Vector2(player_x, player_y)
+    dx, dy = second_player - first_player
 
-    player_hitbox.x = player_x
-    player_hitbox.y = player_y
+    player_x = first_player.x + dx
+    player_hitbox.x = round(player_x)
 
     if player_hitbox.colliderect(box):
-        if dy < 0:
-            box.y = player_hitbox.top - box.height
-        elif dy > 0:
-            box.y = player_hitbox.bottom
+        if dx > 0:
+            box.left = player_hitbox.right
+        elif dx < 0:
+            box.right = player_hitbox.left
+
+    player_y = first_player.y + dy
+    player_hitbox.y = round(player_y)
 
     if player_hitbox.colliderect(box):
-        if dx < 0:
-            box.x = player_hitbox.left - box.width
-        elif dx > 0:
-            box.x = player_hitbox.right
+        if dy > 0:
+            box.top = player_hitbox.bottom
+        elif dy < 0:
+            box.bottom = player_hitbox.top
 
     box_x = box.x
     box_y = box.y
