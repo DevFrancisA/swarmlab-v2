@@ -71,7 +71,6 @@ def play():
 
         # update - calculate position, sync collision rects, detect and resolve collisions, finalize positions
         first_player = pygame.math.Vector2(player_x, player_y)
-        
 
         if W:
             player_y -= 150 * delta_time
