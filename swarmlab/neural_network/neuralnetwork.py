@@ -19,17 +19,8 @@ class NeuralNetwork:
     def ReLU(self, logits):
         return np.maximum(0, logits)
 
-    def derivative_ReLU(self, logits):
-        return logits > 0
-
-    def softmax(self, logits):
-        # Subtract by largest number to avoid float overflow in e^logits 
-        numerically_stabilized_logits = logits - np.max(logits, axis=0, keepdims=True)
-
-        # Softmax
-        exp_logits = np.exp(numerically_stabilized_logits)
-        denominator = np.sum(exp_logits, axis=0, keepdims=True)
-        return exp_logits / denominator
+    def Tanh(self, logits):
+        return np.tanh(logits)
  
     def forward_propogation(self, X):
         logit_layers = []
@@ -46,16 +37,47 @@ class NeuralNetwork:
             if i != len(self.weights) - 1:
                 activation_layers.append(self.ReLU(logit))
 
-        activation = self.softmax(logit_layers[-1])
+        activation = self.Tanh(logit_layers[-1])
         activation_layers.append(activation)
 
         return logit_layers, activation_layers
 
-    def one_hot_encode(self, Y):
-        one_hot_Y = np.zeros((Y.size, self.layer_sizes[-1]))
-        one_hot_Y[np.arange(Y.size), Y] = 1
-        one_hot_Y = one_hot_Y.T
-        return one_hot_Y
+    def get_params(self):
+        chromosome = []
+
+        for i in self.weights:
+            flattened_array = i.flatten()
+            chromosome.append(flattened_array)
+
+        for i in self.biases:
+            flattened_array = i.flatten()
+            chromosome.append(flattened_array)
+
+        return np.concatenate(chromosome)
+
+    def set_params(self, chromosome):
+        prev_layer_size = 0
+        prev_bias = len(chromosome) - np.sum(self.layer_sizes[1:])
+
+        new_weights = []
+        new_biases = []
+
+        for y in range(len(self.layer_sizes) - 1):
+            cur_layer_size = prev_layer_size + (self.layer_sizes[y] * self.layer_sizes[y + 1])
+            cur_bias = prev_bias + self.layer_sizes[y + 1]
+
+            weights = chromosome[prev_layer_size:cur_layer_size]
+            biases = chromosome[prev_bias:cur_bias]
+
+            new_weights.append(np.reshape(weights, (self.layer_sizes[y + 1], self.layer_sizes[y])))
+            new_biases.append(np.reshape(biases, (self.layer_sizes[y + 1], 1)))
+
+            prev_layer_size = prev_layer_size + (self.layer_sizes[y] * self.layer_sizes[y + 1])
+            prev_bias = prev_bias + self.layer_sizes[y + 1]        
+
+        self.weights = new_weights
+        self.biases = new_biases
+        
 
        
 new_mlp = NeuralNetwork([8, 16, 32, 2])
@@ -69,6 +91,12 @@ X = np.array([
     [0.3],
     [0.7]
 ])
+
+new_mlp.forward_propogation(X)
+chromosome = new_mlp.get_params()
+new_mlp.set_params(chromosome)
+
+
 
 
 
