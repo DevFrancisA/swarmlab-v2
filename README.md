@@ -4,7 +4,7 @@
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
 
-SwarmLab is a simulation in which you can build rooms with obstacles to stop a pre-trained swarm of agents from completing a task.
+A neuroevolution project showcasing a "swarm" of agents coordinating to transport a cube to a target.
 
 ## Project Organization
 
