@@ -55,7 +55,17 @@ class NeuralNetwork:
 
         return np.concatenate(chromosome)
 
+    def get_network_size(self):
+        size = 0
+        for y in range(len(self.layer_sizes) - 1):
+            size += self.layer_sizes[y] * self.layer_sizes[y + 1]
+            size += self.layer_sizes[y + 1]
+        return size
+
     def set_params(self, chromosome):
+        if len(chromosome) != self.get_network_size():
+            raise ValueError("Genome size does not match network size")
+
         prev_layer_size = 0
         prev_bias = len(chromosome) - np.sum(self.layer_sizes[1:])
 
@@ -73,13 +83,12 @@ class NeuralNetwork:
             new_biases.append(np.reshape(biases, (self.layer_sizes[y + 1], 1)))
 
             prev_layer_size = prev_layer_size + (self.layer_sizes[y] * self.layer_sizes[y + 1])
-            prev_bias = prev_bias + self.layer_sizes[y + 1]        
+            prev_bias = prev_bias + self.layer_sizes[y + 1]       
 
         self.weights = new_weights
         self.biases = new_biases
-        
 
-       
+
 new_mlp = NeuralNetwork([8, 16, 32, 2])
 X = np.array([
     [0.2],
@@ -95,7 +104,6 @@ X = np.array([
 new_mlp.forward_propogation(X)
 chromosome = new_mlp.get_params()
 new_mlp.set_params(chromosome)
-
 
 
 
