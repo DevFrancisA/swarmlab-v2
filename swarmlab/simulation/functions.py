@@ -1,11 +1,13 @@
 
 # init
 import pygame
-import os
+from swarmlab.neural_network import neuralnetwork
+import numpy as np
 
 pygame.init()
 
 screen = pygame.display.set_mode((640, 640))
+screen_rect = screen.get_rect()
 
 player = pygame.image.load('swarmlab/simulation/black_dot.png').convert_alpha()
 player = pygame.transform.scale(player,
@@ -21,26 +23,34 @@ player_y = 0
 player_hitbox = pygame.Rect(player_x, player_y, player.get_width(), player.get_height())
 box = pygame.Rect(box_x, box_y, 75, 75)
 goal = pygame.Rect(450, 450, 200, 200)
+player_distance = 150
 
 # game control and timing
 clock = pygame.time.Clock()
 delta_time = 0.1
 
-# simulation
 def simulation(action):
     global player_x
     global player_y
     global delta_time
     global box_x
     global box_y
+    global player_distance
 
     # update - calculate position, sync collision rects, detect and resolve collisions, finalize positions
     first_player = pygame.math.Vector2(player_x, player_y)
 
     # decide movement
-    player_x += action[0] * 150 * delta_time
-    player_y += action[1] * 150 * delta_time
+    if action[0] > 0:
+        player_x += min(action[0] * player_distance * delta_time + player_distance, screen.width - player.width)
+    elif action[0] < 0:
+        player_x += max(action[0] * player_distance * delta_time - player_distance, 0)
 
+    if action[1] > 0:
+        player_y += min(action[1] * player_distance * delta_time + player_distance, screen.height - player.height)
+    elif action[1] < 0:
+        player_y += max(action[1] * player_distance * delta_time - player_distance, 0)
+        
     second_player = pygame.math.Vector2(player_x, player_y)
     dx, dy = second_player - first_player
 
@@ -66,7 +76,7 @@ def simulation(action):
     box_y = box.y
 
     if goal.contains(box):
-        win_screen(screen)
+        pygame.quit()
 
     # render - clear screen, draw surfaces, call flip to display new frame
     screen.fill((255, 255, 255))
@@ -81,6 +91,7 @@ def simulation(action):
     delta_time = clock.tick(60) / 1000
     delta_time = max(0.001, min(0.1, delta_time))
 
+    return player_x, player_y, box_x, box_y
 
 def win_screen(screen):
     running = True
@@ -96,8 +107,14 @@ def win_screen(screen):
         screen.blit(text, (200, 250))
         pygame.display.flip()
 
+def agent_controller(observations: list[float | int], neural_network):
+    np_array = np.array(observations)
+    X = np.reshape(np_array, (-1, 1))
+    _, activ_layer = neural_network.forward_propogation(X)
+    action = activ_layer[-1]
+    return (action[0][0], action[1][0])
 
-def controller():
+def play_game_manually():
     running = True
     W = False
     A = False
@@ -148,6 +165,29 @@ def controller():
         
         simulation(action)
 
-controller()
+def run_simulation(max_iterations):
+
+    # Initialize
+    counter = 0
+    neural_network = neuralnetwork.NeuralNetwork([4, 16, 32, 2])
+    action = (0, 0)
+    player_x = 0
+    player_y = 0
+    box_x = 150
+    box_y = 150
+
+    while True:
+        if counter > max_iterations:
+            return "max iterations reached"
+
+        # use observations to get new action
+        action = agent_controller([player_x, player_y, box_x, box_y], neural_network)
+
+        # do action then get observations
+        player_x, player_y, box_x, box_y = simulation(action)
+
+        counter += 1
+
+run_simulation(500)
 
 pygame.quit()
