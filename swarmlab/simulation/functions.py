@@ -42,14 +42,18 @@ def simulation(action):
 
     # decide movement
     if action[0] > 0:
-        player_x += min(action[0] * player_distance * delta_time + player_distance, screen.width - player.width)
+        new_pos = player_x + action[0] * player_distance * delta_time
+        player_x = min(new_pos, screen.get_width() - player.width)
     elif action[0] < 0:
-        player_x += max(action[0] * player_distance * delta_time - player_distance, 0)
+        new_pos = player_x + action[0] * player_distance * delta_time
+        player_x = max(new_pos, 0)
 
     if action[1] > 0:
-        player_y += min(action[1] * player_distance * delta_time + player_distance, screen.height - player.height)
+        new_pos = player_y + action[1] * player_distance * delta_time
+        player_y = min(new_pos, screen.get_height() - player.height)
     elif action[1] < 0:
-        player_y += max(action[1] * player_distance * delta_time - player_distance, 0)
+        new_pos = player_y + action[1] * player_distance * delta_time
+        player_y = max(new_pos, 0)
         
     second_player = pygame.math.Vector2(player_x, player_y)
     dx, dy = second_player - first_player
@@ -59,18 +63,30 @@ def simulation(action):
 
     if player_hitbox.colliderect(box):
         if dx > 0:
-            box.left = player_hitbox.right
+            box.left = min(player_hitbox.right, screen.get_width() - box.width)
+            if box.right == screen.get_width():
+                player_x = box.left - player_hitbox.width
+                player_hitbox.x = round(player_x)
         elif dx < 0:
-            box.right = player_hitbox.left
+            box.right = max(player_hitbox.left, box.width)
+            if box.left == 0:
+                player_x = box.width
+                player_hitbox.x = round(player_x)
 
     player_y = first_player.y + dy
     player_hitbox.y = round(player_y)
 
     if player_hitbox.colliderect(box):
         if dy > 0:
-            box.top = player_hitbox.bottom
+            box.top = min(player_hitbox.bottom, screen.get_height() - box.height)
+            if box.bottom == screen.get_height():
+                player_y = box.top - player_hitbox.height
+                player_hitbox.y = round(player_y)
         elif dy < 0:
-            box.bottom = player_hitbox.top
+            box.bottom = max(player_hitbox.top, box.height)
+            if box.top == 0:
+                player_y = box.height
+                player_hitbox.y = round(player_y)
 
     box_x = box.x
     box_y = box.y
@@ -171,13 +187,13 @@ def run_simulation(max_iterations):
     counter = 0
     neural_network = neuralnetwork.NeuralNetwork([4, 16, 32, 2])
     action = (0, 0)
-    player_x = 0
-    player_y = 0
-    box_x = 150
-    box_y = 150
+    global player_x
+    global player_y
+    global box_x
+    global box_y 
 
     while True:
-        if counter > max_iterations:
+        if counter >= max_iterations:
             return "max iterations reached"
 
         # use observations to get new action
@@ -188,6 +204,6 @@ def run_simulation(max_iterations):
 
         counter += 1
 
-run_simulation(500)
+run_simulation(1000)
 
 pygame.quit()
