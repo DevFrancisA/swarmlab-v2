@@ -26,10 +26,9 @@ goal = pygame.Rect(450, 450, 200, 200)
 player_distance = 150
 
 # game control and timing
-clock = pygame.time.Clock()
 delta_time = 0.1
 
-def simulation(action):
+def simulation(action, render):
     global player_x
     global player_y
     global delta_time
@@ -95,16 +94,17 @@ def simulation(action):
         pygame.quit()
 
     # render - clear screen, draw surfaces, call flip to display new frame
-    screen.fill((255, 255, 255))
+    if render == True:
+        screen.fill((255, 255, 255))
 
-    pygame.draw.rect(screen, (80, 200, 120), goal)
-    pygame.draw.rect(screen, (0, 0, 0), box)
-    screen.blit(player, (player_x, player_y))
+        pygame.draw.rect(screen, (80, 200, 120), goal)
+        pygame.draw.rect(screen, (0, 0, 0), box)
+        screen.blit(player, (player_x, player_y))
 
-    pygame.display.flip()
+        pygame.display.flip()
 
     # time related
-    delta_time = clock.tick(60) / 1000
+    delta_time = 1 / 60
     delta_time = max(0.001, min(0.1, delta_time))
 
     return player_x, player_y, box_x, box_y
@@ -130,7 +130,7 @@ def agent_controller(observations: list[float | int], neural_network):
     action = activ_layer[-1]
     return (action[0][0], action[1][0])
 
-def play_game_manually():
+def play_game_manually(render: bool):
     running = True
     W = False
     A = False
@@ -179,31 +179,41 @@ def play_game_manually():
 
         action = (direction_x, direction_y)
         
-        simulation(action)
+        simulation(action, render)
 
-def run_simulation(max_iterations):
+def run_simulation(max_iterations: int, render: bool, population_amount: int):
 
     # Initialize
-    counter = 0
-    neural_network = neuralnetwork.NeuralNetwork([4, 16, 32, 2])
+    chromosomes = []
     action = (0, 0)
     global player_x
     global player_y
     global box_x
     global box_y 
 
-    while True:
-        if counter >= max_iterations:
-            return "max iterations reached"
+    for i in range(population_amount):
+        player_x = 0
+        player_y = 0
+        box_x = 0
+        box_y = 0
+        counter = 1
+        neural_network = neuralnetwork.NeuralNetwork([4, 16, 32, 2])
+        chromosome_dna = neural_network.get_params()
+        chromosomes.append(chromosome_dna)
 
-        # use observations to get new action
-        action = agent_controller([player_x, player_y, box_x, box_y], neural_network)
+        while counter <= max_iterations:
+            print(f"Step {counter}/{max_iterations}")
 
-        # do action then get observations
-        player_x, player_y, box_x, box_y = simulation(action)
+            # use observations to get new action
+            action = agent_controller([player_x, player_y, box_x, box_y], neural_network)
 
-        counter += 1
+            # do action then get observations
+            player_x, player_y, box_x, box_y = simulation(action, render)
 
-run_simulation(1000)
+            counter += 1
+
+    return chromosomes
+
+chromsomes = run_simulation(5000, True, 10)
 
 pygame.quit()
